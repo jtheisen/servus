@@ -68,7 +68,7 @@ class WithCommand
 	{
 		if (!String.IsNullOrWhiteSpace(Cmd))
 		{
-			WindowsArgs.Parse(InterpolateCommandLine(Cmd, interpolationContext), out var parts);
+			var parts = CommandLineArgs.Parse(InterpolateCommandLine(Cmd, interpolationContext));
 
 			if (parts.Length == 0)
 			{
