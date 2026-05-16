@@ -24,7 +24,9 @@
     <None Include="README.md" Pack="true" PackagePath="\" />
     <None Remove="servus.sample.yaml" />
     <EmbeddedResource Include="servus.sample.yaml" LogicalName="servus.sample.yaml" />
-    <None Update="nlog.config" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="nlog.config" CopyToOutputDirectory="Always" />
+    <None Update="nlog.production.config" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="nlog.targets.config" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
@@ -37,5 +39,9 @@
     <PackageReference Include="System.Reactive" Version="6.1.0" />
     <PackageReference Include="YamlDotNet" Version="12.1.0" />
   </ItemGroup>
+
+  <Target Name="UseProductionNLogConfig" AfterTargets="Build" Condition="'$(UseProductionNLogConfig)' == 'true'">
+    <Copy SourceFiles="nlog.production.config" DestinationFiles="$(TargetDir)nlog.config" />
+  </Target>
 
 </Project>

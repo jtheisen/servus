@@ -35,7 +35,7 @@ jobs:
           "package_version=$packageVersion" >> $env:GITHUB_OUTPUT
 
       - name: Build
-        run: dotnet build Servus.sln --configuration Debug --no-restore -p:PackageVersion=${{ steps.version.outputs.package_version }}
+        run: dotnet build Servus.sln --configuration Debug --no-restore -p:PackageVersion=${{ steps.version.outputs.package_version }} -p:UseProductionNLogConfig=true
 
       - name: Pack
         run: dotnet pack Servus/Servus.csproj --configuration Debug --no-build --output artifacts -p:PackageVersion=${{ steps.version.outputs.package_version }}
