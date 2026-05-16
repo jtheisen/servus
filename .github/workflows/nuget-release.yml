@@ -41,4 +41,13 @@ jobs:
         run: dotnet pack Servus/Servus.csproj --configuration Debug --no-build --output artifacts -p:PackageVersion=${{ steps.version.outputs.package_version }}
 
       - name: Publish to NuGet
-        run: dotnet nuget push "artifacts/*.nupkg" --api-key "${{ secrets.NUGET_API_KEY }}" --source "https://api.nuget.org/v3/index.json" --skip-duplicate
+        shell: pwsh
+        run: |
+          $packages = Get-ChildItem artifacts -Filter *.nupkg
+          if ($packages.Count -eq 0) {
+            throw "No NuGet packages found in artifacts."
+          }
+
+          $packages | ForEach-Object {
+            dotnet nuget push $_.FullName --api-key "${{ secrets.NUGET_API_KEY }}" --source "https://api.nuget.org/v3/index.json" --skip-duplicate
+          }
