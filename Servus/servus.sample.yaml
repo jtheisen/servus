@@ -1,0 +1,39 @@
+# Servus sample configuration file
+
+# Create profiles for task properties that are shared by tasks
+profiles:
+  - name: fe
+    # Shortcuts you can invoke with hitting K or X first
+    shortcuts:
+      - name: Open Code
+        key: i
+        # All task props can be interpolated in cmd
+        cmd: code -n {wd}
+  - name: be
+    cmd: dotnet run --no-build --project {proj}/{proj}.csproj
+    shortcuts:
+      - name: Open Visual Studio
+        key: i
+        cmd: start devenv {wd}/{proj}.sln
+
+tasks:
+  - name: First service
+    # You can give the command separately and the arguments as a list...
+    exe: pwsh
+    args: [ sample-service.ps1 ]
+  - name: Second service
+    # ...or together in one string.
+    cmd: pwsh sample-service.ps1
+  - name: Third service # Full list of options:
+    wd: my-serivce # working directory relative to this file
+    port: 3000 # optional port for connection checks
+    method: tcp # TCP for tcp-based checks, GET, HEAD, or OPTIONS for http checks
+    profiles: [ fe ] # profiles to take defaults from
+    # Shortcuts can also live here:
+    shortcuts:
+      - name: Open explorer
+        key: e
+        cmd: explorer {wd}
+    # And finally some properties only for use in interpolation:
+    sln: MySolution 
+    proj: MyProject

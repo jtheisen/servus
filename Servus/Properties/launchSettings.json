@@ -1,0 +1,13 @@
+{
+  "profiles": {
+    "Servus": {
+      "commandName": "Project",
+      "workingDirectory": "$(ProjectDir)"
+    },
+    "RunPwsh": {
+      "commandName": "Project",
+      "workingDirectory": "$(ProjectDir)",
+      "commandLineArgs": "run -r direct -w Normal  pwsh.exe -c echo Hello"
+    }
+  }
+}

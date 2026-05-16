@@ -1,0 +1,47 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Servus",
+      "type": "dotnet",
+      "request": "launch",
+      "projectPath": "${workspaceFolder}/Servus/Servus.csproj",
+      "preLaunchTask": "build"
+    },
+    {
+      "name": "Servus: run pwsh",
+      "type": "coreclr",
+      "request": "launch",
+      "program": "${workspaceFolder}/Servus/bin/Debug/net9.0/Servus.exe",
+      "args": [
+        "run",
+        "-r",
+        "direct",
+        "-w",
+        "Normal",
+        "pwsh.exe",
+        "--",
+        "-c",
+        "echo Hello"
+      ]
+    },
+    {
+      "name": "Servus: wrapped-windowed",
+      "type": "coreclr",
+      "request": "launch",
+      "program": "${workspaceFolder}/Servus/bin/Debug/net9.0/Servus.exe",
+      "args": [
+        "run",
+        "-r",
+        "wrapped-windowed",
+        "-w",
+        "Normal",
+        "--keep-terminal-open",
+        "2",
+        "pwsh.exe",
+        "--",
+        ".\\test-scripts\\wait.ps1"
+      ]
+    }
+  ]
+}

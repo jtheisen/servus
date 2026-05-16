@@ -1,0 +1,4 @@
+{
+  "csharp.debug.console": "externalTerminal",
+  "editor.formatOnType": true
+}
