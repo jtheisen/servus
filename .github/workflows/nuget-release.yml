@@ -1,0 +1,44 @@
+name: NuGet Release
+
+on:
+  push:
+    branches:
+      - release
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Restore
+        run: dotnet restore Servus.sln
+
+      - name: Compute package version
+        id: version
+        shell: pwsh
+        run: |
+          [xml]$project = Get-Content Servus/Servus.csproj
+          $baseVersion = $project.Project.PropertyGroup.PackageVersion
+          $packageVersion = "$baseVersion.${{ github.run_number }}"
+          "package_version=$packageVersion" >> $env:GITHUB_OUTPUT
+
+      - name: Build
+        run: dotnet build Servus.sln --configuration Debug --no-restore -p:PackageVersion=${{ steps.version.outputs.package_version }}
+
+      - name: Pack
+        run: dotnet pack Servus/Servus.csproj --configuration Debug --no-build --output artifacts -p:PackageVersion=${{ steps.version.outputs.package_version }}
+
+      - name: Publish to NuGet
+        run: dotnet nuget push "artifacts/*.nupkg" --api-key "${{ secrets.NUGET_API_KEY }}" --source "https://api.nuget.org/v3/index.json" --skip-duplicate
