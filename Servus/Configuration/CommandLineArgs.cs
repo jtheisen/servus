@@ -7,10 +7,13 @@ static class CommandLineArgs
 		if (OperatingSystem.IsWindows())
 		{
 			WindowsArgs.Parse(commandLine, out var args);
+
 			return args;
 		}
-
-		return PosixArgs.Parse(commandLine);
+		else
+		{
+			return PosixArgs.Parse(commandLine);
+		}
 	}
 }
 
