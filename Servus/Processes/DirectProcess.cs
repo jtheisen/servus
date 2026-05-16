@@ -75,17 +75,24 @@ class DirectProcess : SystemDiagnosticsProcess, IProcess
 
   public override void Stop()
   {
-    logger.Info("Trying gracefully");
-
-    try
+    if (OperatingSystem.IsWindows())
     {
-      using var scope = settings.CreateConsoleBlockedScope?.Invoke();
+      logger.Info("Trying gracefully");
 
-      ConsoleProcessRunner.SendBreak(Process);
+      try
+      {
+        using var scope = settings.CreateConsoleBlockedScope?.Invoke();
+
+        ConsoleProcessRunner.SendBreak(Process);
+      }
+      catch (Exception ex)
+      {
+        logger.Error(ex, "Exception on sending a ctrl-c");
+      }
     }
-    catch (Exception ex)
+    else
     {
-      logger.Error(ex, "Exception on sending a ctrl-c");
+      logger.Info("Skipping graceful stop on this platform");
     }
 
     logger.Info("Forcing a kill");

@@ -61,7 +61,10 @@ static class ConsoleProcessRunner
     {
         var process = StartProcess(settings);
 
-        LogProcessesOnThisConsole(settings.OnOutput ?? Console.WriteLine);
+        if (OperatingSystem.IsWindows())
+        {
+            LogProcessesOnThisConsole(settings.OnOutput ?? Console.WriteLine);
+        }
 
         Console.Read();
 
@@ -81,7 +84,10 @@ static class ConsoleProcessRunner
 
         using var scope = settings.CreateConsoleBlockedScope?.Invoke();
 
-        SendBreak(process);
+        if (OperatingSystem.IsWindows())
+        {
+            SendBreak(process);
+        }
 
         if (!process.HasExited)
         {
@@ -96,7 +102,7 @@ static class ConsoleProcessRunner
         }
         else
         {
-            process.Kill();
+            process.Kill(true);
 
             settings.OnOutput?.Invoke("Service killed");
         }
