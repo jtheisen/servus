@@ -428,6 +428,9 @@ FodyWeavers.xsd
 *.msm
 *.msp
 
+**/bin/
+**/nupkg/
+
 servus.yaml
 Servus/servus.yaml
 Servus/servus-*.yaml
