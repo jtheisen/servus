@@ -2,6 +2,12 @@
 
 Servus is a small terminal UI for starting and watching local services during development.
 
+> Maturity warning: As of now, platforms other than Windows don't request a
+> graceful exit (ctrl-c) for started services and resort to killing them.
+> Windows does this only as a fallback. Otherwise, my biggest maturity concern
+> is that services may stay alive under certain edge conditions. This will
+> hopefull be ironed out in the future.
+
 ## Install
 
 Servus is distributed as a .NET tool:
