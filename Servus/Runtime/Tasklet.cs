@@ -32,7 +32,7 @@ class Tasklet : IDisposable
 
 	public String UiState => State.ToString().PadRight(11) + OutputSpinner;
 
-	public Int32? ExitCode => process?.ExitCode;
+	public Int32? ExitCode => process is { HasExited: true } ? process.ExitCode : null;
 
 	public List<String> Output { get; } = new();
 
@@ -120,7 +120,7 @@ class Tasklet : IDisposable
 		}
 	}
 
-	public async void Stop()
+	public void Stop()
 	{
 		if (State == State.Restarting)
 		{
@@ -147,6 +147,16 @@ class Tasklet : IDisposable
 		catch (Exception ex)
 		{
 			Output.Add(ex.Message);
+		}
+	}
+
+	public async Task StopAndWaitAsync(CancellationToken cancellationToken)
+	{
+		Stop();
+
+		while (State != State.Stopped)
+		{
+			await Task.Delay(50, cancellationToken);
 		}
 	}
 

@@ -12,6 +12,7 @@ class Configuration
 {
 	const String SampleResourceName = "servus.sample.yaml";
 
+	public Settings Settings { get; set; } = new();
 	public List<Task> Tasks { get; set; } = new();
 	public List<Task> Profiles { get; set; } = new();
 
@@ -53,6 +54,11 @@ class Configuration
 
 		File.WriteAllText(filePath, reader.ReadToEnd());
 	}
+}
+
+class Settings
+{
+	public Int32? Port { get; set; }
 }
 
 class WithCommand

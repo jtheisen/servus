@@ -4,7 +4,7 @@ using System.Diagnostics;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
-class UiCommand : Command<UiCommand.Settings>
+class UiCommand : AsyncCommand<UiCommand.Settings>
 {
   const String ConfigurationFile = "servus.yaml";
 
@@ -14,17 +14,34 @@ class UiCommand : Command<UiCommand.Settings>
     [Description("The YAML configuration file to load")]
     [DefaultValue(ConfigurationFile)]
     public String Config { get; init; } = ConfigurationFile;
+
+    [CommandOption("--port")]
+    [Description("Starts the local API server on this port")]
+    public Int32? Port { get; init; }
   }
 
-  protected override int Execute(CommandContext context, Settings settings, CancellationToken cancellation)
+  protected override async Task<Int32> ExecuteAsync(
+    CommandContext context,
+    Settings settings,
+    CancellationToken cancellation)
   {
     Program.SetName("app");
 
     var store = AppState.Load(settings.Config);
 
+    var port = settings.Port ?? store.Settings.Port;
+    await using var api = port is Int32 p
+      ? await ApiServer.StartAsync(store, p, cancellation)
+      : null;
+
     var ui = new Ui(store);
 
     ui.Run();
+
+    if (api is not null)
+    {
+      await api.StopAsync(cancellation);
+    }
 
     return 0;
   }

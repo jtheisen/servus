@@ -1,5 +1,9 @@
 # Servus sample configuration file
 
+settings:
+  # If set, Servus starts a localhost API server beside the UI.
+  port: 5057
+
 # Create profiles for task properties that are shared by tasks
 profiles:
   - name: fe

@@ -1,9 +1,13 @@
 # TODO
 
+## Imminent
+
 ## Soon
 
-- production logging
-- kill processes on exit
+- Limit the log buffer
+- Implement graceful exit on nix
+- Use cargs syntax on the cmd as well
+- Full screen logging window
 
 ## Maybe later
 
