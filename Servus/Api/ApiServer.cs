@@ -38,11 +38,11 @@ static class ApiServer
 		var app = builder.Build();
 
 		MapEndpoints(app, state);
-		app.MapMcp();
+		app.MapMcp("/mcp");
 
 		await app.StartAsync(cancellationToken);
 
-		logger.Info($"API server listening on http://127.0.0.1:{port}");
+		logger.Info($"API server listening on http://127.0.0.1:{port}; MCP endpoint is http://127.0.0.1:{port}/mcp");
 
 		return app;
 	}
@@ -51,11 +51,18 @@ static class ApiServer
 	{
 		app.MapGet("/tasks", () => Results.Ok(state.GetTasks()));
 
-		app.MapGet("/tasks/{name}/logs", (String name, Int32? lines) =>
+		app.MapGet("/tasks/{name}/logs", (String name, Int32? lines, HttpRequest request) =>
 		{
 			try
 			{
-				return Results.Ok(state.GetTaskLogTail(name, lines));
+				var tail = state.GetTaskLogTail(name, lines);
+
+				if (request.Headers.Accept.Any(value => value?.Contains("application/json") == true))
+				{
+					return Results.Ok(tail);
+				}
+
+				return Results.Text(String.Join(Environment.NewLine, tail.LogsTail), "text/plain");
 			}
 			catch (FriendlyException ex)
 			{

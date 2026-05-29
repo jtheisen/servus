@@ -80,6 +80,18 @@ class Ui(AppState store)
       ctx.haveCustomKeyCombo = true;
       ctx.statusBarText = "Press custom command key";
     }),
+    new([ConsoleKey.B], "Browser command", ctx =>
+    {
+      if (ctx.Store.Settings.Port is null)
+      {
+        ctx.statusBarText = "No http is being served, configure port and restart";
+      }
+      else
+      {
+        ctx.haveBrowserKeyCombo = true;
+        ctx.statusBarText = "Press browser command key";
+      }
+    }),
     new([ConsoleKey.L], "Toggle log", ctx =>
     {
       ctx.showLoggingWidget = !ctx.showLoggingWidget;
@@ -95,9 +107,11 @@ class Ui(AppState store)
   Int32 selectedIndex;
   Int32 scrollOffset;
   Boolean haveCustomKeyCombo;
+  Boolean haveBrowserKeyCombo;
   Boolean showLoggingWidget;
 
   IReadOnlyList<Tasklet> Tasklets => store.Tasklets;
+  AppState Store => store;
   Tasklet SelectedTask => Tasklets[selectedIndex];
   Int32 VisibleRowCount => GetVisibleRowCount(showLoggingWidget);
 
@@ -157,6 +171,30 @@ class Ui(AppState store)
               else
               {
                 statusBarText = $"Unkown custom shortcut '{key.KeyChar}'";
+              }
+            }
+            else if (haveBrowserKeyCombo)
+            {
+              haveBrowserKeyCombo = false;
+
+              if (key.KeyChar == 'l')
+              {
+                var url = $"http://127.0.0.1:{store.Settings.Port}/tasks/{Uri.EscapeDataString(task.Name)}/logs";
+
+                try
+                {
+                  ConsoleProcessRunner.RunProcess([url]);
+
+                  statusBarText = $"Opened logs: {task.Name}";
+                }
+                catch (Exception)
+                {
+                  statusBarText = $"Failed to open logs: {url}";
+                }
+              }
+              else
+              {
+                statusBarText = $"Unkown browser command '{key.KeyChar}'";
               }
             }
             else

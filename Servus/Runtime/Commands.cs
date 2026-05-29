@@ -17,7 +17,7 @@ class UiCommand : AsyncCommand<UiCommand.Settings>
 
     [CommandOption("--port")]
     [Description("Starts the local API server on this port")]
-    public Int32? Port { get; init; }
+    public Int32? Port { get; set; }
   }
 
   protected override async Task<Int32> ExecuteAsync(
@@ -29,8 +29,8 @@ class UiCommand : AsyncCommand<UiCommand.Settings>
 
     var store = AppState.Load(settings.Config);
 
-    var port = settings.Port ?? store.Settings.Port;
-    await using var api = port is Int32 p
+    store.Settings.Port = settings.Port ??= store.Settings.Port;
+    await using var api = settings.Port is Int32 p
       ? await ApiServer.StartAsync(store, p, cancellation)
       : null;
 
