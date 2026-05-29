@@ -205,7 +205,11 @@ class Ui(AppState store)
 
               statusBarText = "";                
 
-              if (binding is not null)
+              if (store.Settings.StartAllKey is Char startAllKey && key.KeyChar == startAllKey)
+              {
+                StartAll();
+              }
+              else if (binding is not null)
               {
                 binding.Execute(this);
 
@@ -236,6 +240,19 @@ class Ui(AppState store)
           ctx.Refresh();
         }
       });
+  }
+
+  void StartAll()
+  {
+    var count = 0;
+
+    foreach (var tasklet in Tasklets.Where(t => t.State == State.Stopped))
+    {
+      tasklet.Start();
+      ++count;
+    }
+
+    statusBarText = $"Started {count} services";
   }
 
   void EnsureSelectedTaskVisible(Int32 itemCount)

@@ -3,6 +3,8 @@
 settings:
   # If set, Servus starts a localhost API server beside the UI.
   port: 5057
+  # Optional hidden hotkey that starts all stopped services.
+  startAllKey: a
 
 # Create profiles for task properties that are shared by tasks
 profiles:

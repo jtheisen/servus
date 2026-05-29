@@ -59,6 +59,7 @@ class Configuration
 class Settings
 {
 	public Int32? Port { get; set; }
+	public Char? StartAllKey { get; set; }
 }
 
 class WithCommand
