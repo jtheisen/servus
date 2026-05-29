@@ -40,6 +40,20 @@ class AppState
 	public IReadOnlyList<TaskDto> GetTasks()
 		=> Tasklets.Select(TaskDto.From).ToList();
 
+	public TaskLogTailDto GetTaskLogTail(String task, Int32? lines = null)
+	{
+		if (!taskletsById.TryGetValue(task, out var tasklet))
+		{
+			throw new FriendlyException($"Unknown task '{task}'.");
+		}
+
+		var lineCount = lines is Int32 value
+			? Math.Clamp(value, 0, 1000)
+			: tasklet.Output.Count;
+
+		return new TaskLogTailDto(tasklet.Name, tasklet.Output.TakeLast(lineCount).ToList());
+	}
+
 	public async Task<IReadOnlyList<TaskActionResultDto>> ExecuteActionsAsync(
 		IEnumerable<TaskActionDto> actions,
 		CancellationToken cancellationToken)
@@ -135,3 +149,8 @@ record TaskActionResultDto(
 	Boolean Success,
 	String? State,
 	String? Message);
+
+record TaskLogTailDto(
+	String Task,
+	[property: JsonPropertyName("logs-tail")]
+	IReadOnlyList<String> LogsTail);
