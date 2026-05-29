@@ -1,5 +1,7 @@
 using System.Linq;
 
+using System.Text.Json.Serialization;
+
 class AppState
 {
 	public IReadOnlyList<Tasklet> Tasklets { get; }
@@ -105,27 +107,18 @@ class AppState
 record TaskDto(
 	String Name,
 	String? WorkingDirectory,
-	String Type,
-	String? ProcessRunner,
-	Int32? Port,
-	String Method,
 	String State,
-	Boolean IsPortConnectable,
 	String? GitBranch,
 	Int32? ExitCode,
 	IReadOnlyList<String> Cargs,
-	IReadOnlyList<String> Logs)
+	[property: JsonPropertyName("logs-tail")]
+	IReadOnlyList<String> LogsTail)
 {
 	public static TaskDto From(Tasklet tasklet)
 		=> new(
 			tasklet.Name,
 			tasklet.Wd,
-			tasklet.Type,
-			tasklet.ProcessRunner,
-			tasklet.Port,
-			tasklet.Method.ToString(),
 			tasklet.State.ToString(),
-			tasklet.IsPortConnectable,
 			tasklet.GitBranch,
 			tasklet.ExitCode,
 			tasklet.Configuration.GetCargs(tasklet.Configuration),
