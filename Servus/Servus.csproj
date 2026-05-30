@@ -11,7 +11,7 @@
     <RollForward>LatestMajor</RollForward>
 
     <PackageId>IronStone.Servus</PackageId>
-    <PackageVersion>1.0.6</PackageVersion>
+    <PackageVersion>1.0.7</PackageVersion>
     <Authors>Jens Theisen</Authors>
     <PackageTags>dotnet-tool cli</PackageTags>
     <Description>Simple cli process manager.</Description>
