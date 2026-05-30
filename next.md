@@ -4,10 +4,10 @@
 
 ## Soon
 
-- Limit the log buffer
+- Fix annoying console output during UI (flicker)
+- Make the pwsh(.exe) call portable
 - Implement graceful exit on nix
 - Use cargs syntax on the cmd as well
-- Full screen logging window
 
 ## Maybe later
 

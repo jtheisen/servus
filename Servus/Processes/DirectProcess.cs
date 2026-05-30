@@ -56,7 +56,7 @@ class DirectProcess : SystemDiagnosticsProcess, IProcess
 
     Process = ConsoleProcessRunner.StartProcess(
       new ConsoleProcessSettings(
-        ["pwsh.exe", .. args],
+        ["pwsh", .. args],
         WindowStyle: settings.WindowStyle,
         RedirectOutput: settings.RedirectOutput,
         CreateNoWindow: settings.CreateNoWindow,
