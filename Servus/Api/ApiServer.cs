@@ -49,7 +49,7 @@ static class ApiServer
 
 	static void MapEndpoints(IEndpointRouteBuilder app, AppState state)
 	{
-		app.MapGet("/tasks", () => Results.Ok(state.GetTasks()));
+		app.MapGet("/tasks", () => Results.Ok(state.GetTaskOverview()));
 
 		app.MapGet("/tasks/{name}/logs", (String name, Int32? lines, HttpRequest request) =>
 		{
@@ -77,6 +77,20 @@ static class ApiServer
 			var results = await state.ExecuteActionsAsync(request.Actions, cancellationToken);
 
 			return Results.Ok(new { results });
+		});
+
+		app.MapPost("/commands/run", async (
+			RunCommandRequestDto request,
+			CancellationToken cancellationToken) =>
+		{
+			try
+			{
+				return Results.Ok(await state.RunCommandAsync(request, cancellationToken));
+			}
+			catch (FriendlyException ex)
+			{
+				return Results.BadRequest(new { message = ex.Message });
+			}
 		});
 	}
 }

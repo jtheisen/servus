@@ -5,6 +5,10 @@ settings:
   port: 5057
   # Optional hidden hotkey that starts all stopped services.
   startAllKey: a
+  # Commands that the API may run when the command line starts with the prefix.
+  allowedCommands:
+    - dotnet build
+    - git status
 
 # Create profiles for task properties that are shared by tasks
 profiles:

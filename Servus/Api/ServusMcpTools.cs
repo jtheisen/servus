@@ -5,9 +5,9 @@ using ModelContextProtocol.Server;
 class ServusMcpTools(AppState state)
 {
 	[McpServerTool]
-	[Description("Returns the configured Servus tasks with their current state, command arguments, git branch, exit code, and recent log output.")]
-	public IReadOnlyList<TaskDto> GetTasks()
-		=> state.GetTasks();
+	[Description("Returns the configured Servus tasks and allowed command prefixes. Allowed commands are shown with ellipses to indicate that more arguments may follow.")]
+	public TaskOverviewDto GetTasks()
+		=> state.GetTaskOverview();
 
 	[McpServerTool]
 	[Description("Returns a longer tail of recent log output for one Servus task.")]
@@ -40,4 +40,11 @@ class ServusMcpTools(AppState state)
 		[Description("The task actions to run.")] TaskActionDto[] actions,
 		CancellationToken cancellationToken)
 		=> state.ExecuteActionsAsync(actions, cancellationToken);
+
+	[McpServerTool]
+	[Description("Runs a command if it starts with one of the configured allowed command prefixes. Use GetTasks first to inspect allowedCommands.")]
+	public Task<RunCommandResultDto> RunCommand(
+		[Description("The full command line to run. It must start with one of the allowed command prefixes.")] String command,
+		CancellationToken cancellationToken)
+		=> state.RunCommandAsync(new RunCommandRequestDto(command), cancellationToken);
 }

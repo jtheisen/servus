@@ -60,6 +60,7 @@ class Settings
 {
 	public Int32? Port { get; set; }
 	public Char? StartAllKey { get; set; }
+	public List<String> AllowedCommands { get; set; } = new();
 }
 
 class WithCommand

@@ -40,6 +40,14 @@ class AppState
 	public IReadOnlyList<TaskDto> GetTasks()
 		=> Tasklets.Select(TaskDto.From).ToList();
 
+	public TaskOverviewDto GetTaskOverview()
+		=> new(GetTasks(), GetAllowedCommandPrefixes());
+
+	public IReadOnlyList<String> GetAllowedCommandPrefixes()
+		=> Settings.AllowedCommands
+			.Select(c => $"{c} ...")
+			.ToList();
+
 	public TaskLogTailDto GetTaskLogTail(String task, Int32? lines = null)
 	{
 		if (!taskletsById.TryGetValue(task, out var tasklet))
@@ -105,6 +113,67 @@ class AppState
 		}
 	}
 
+	public async Task<RunCommandResultDto> RunCommandAsync(
+		RunCommandRequestDto request,
+		CancellationToken cancellationToken)
+	{
+		var cargs = CommandLineArgs.Parse(request.Command);
+
+		if (cargs.Length == 0)
+		{
+			throw new FriendlyException("The command must not be empty.");
+		}
+
+		AssertCommandAllowed(cargs);
+
+		var output = new List<String>();
+
+		var process = ConsoleProcessRunner.StartProcess(new ConsoleProcessSettings(
+			cargs,
+			CreateNoWindow: true,
+			NoShellExecute: true,
+			OnOutput: output.Add,
+			OnLog: output.Add));
+
+		try
+		{
+			await process.WaitForExitAsync(cancellationToken);
+		}
+		catch
+		{
+			if (!process.HasExited)
+			{
+				process.Kill(true);
+			}
+
+			throw;
+		}
+
+		return new RunCommandResultDto(request.Command, process.ExitCode, output);
+	}
+
+	void AssertCommandAllowed(IReadOnlyList<String> cargs)
+	{
+		foreach (var allowedCommand in Settings.AllowedCommands)
+		{
+			var prefix = CommandLineArgs.Parse(allowedCommand);
+
+			if (prefix.Length <= cargs.Count && prefix.Zip(cargs).All(IsMatch))
+			{
+				return;
+			}
+		}
+
+		throw new FriendlyException(
+			$"Command is not allowed. Allowed prefixes are: {String.Join(", ", GetAllowedCommandPrefixes())}");
+
+		static Boolean IsMatch((String Allowed, String Actual) pair)
+			=> String.Equals(
+				pair.Allowed,
+				pair.Actual,
+				OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+	}
+
 	void SetNewClient(String id, AcceptedClient client)
 	{
 		if (taskletsById.TryGetValue(id, out var tasklet))
@@ -117,6 +186,10 @@ class AppState
 		}
 	}
 }
+
+record TaskOverviewDto(
+	IReadOnlyList<TaskDto> Tasks,
+	IReadOnlyList<String> AllowedCommands);
 
 record TaskDto(
 	String Name,
@@ -149,6 +222,13 @@ record TaskActionResultDto(
 	Boolean Success,
 	String? State,
 	String? Message);
+
+record RunCommandRequestDto(String Command);
+
+record RunCommandResultDto(
+	String Command,
+	Int32 ExitCode,
+	IReadOnlyList<String> Output);
 
 record TaskLogTailDto(
 	String Task,
