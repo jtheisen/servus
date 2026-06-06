@@ -1,8 +1,7 @@
 using System.Net;
 using System.Net.Sockets;
+using System.Reactive.Disposables;
 using Newtonsoft.Json;
-
-delegate void ClientListener(String id, AcceptedClient client);
 
 class ServerInstance
 {
@@ -19,13 +18,11 @@ class Server
 
   public static Server Instance => ServerInstance.Server;
 
-  ClientListener? clientListener;
-
   CancellationToken ct;
 
   TcpListener listener = new TcpListener(IPAddress.Loopback, 0);
 
-  Dictionary<String, Client> clientsById = new();
+  Dictionary<String, ClientSlot> clientsById = new();
 
   Subject<AcceptedClient> clients = new();
 
@@ -33,11 +30,22 @@ class Server
 
   IPEndPoint IPEndPoint => listener.Server.LocalEndPoint as IPEndPoint ?? throw new Exception("Don't have a local IP endpoint");
 
-  IObservable<AcceptedClient> Clients => clients;
+  public Boolean IsClientConnected(String id)
+    => clientsById.TryGetValue(id, out var slot) && (slot.Client?.IsConnected ?? false);
 
-  public void InstallClientListener(ClientListener clientListener)
+  public IObservable<String> ObserveClientOutput(String id)
+    => GetOutput(id);
+
+  public Boolean TrySend(String id, String line)
   {
-    this.clientListener = clientListener;
+    if (!clientsById.TryGetValue(id, out var slot) || slot.Client is not { } client)
+    {
+      logger.Warn("Can't send message to client {id}; client is not connected", id);
+      return false;
+    }
+
+    client.WriteLine(line);
+    return true;
   }
 
   public Server(CancellationToken ct = default)
@@ -96,10 +104,45 @@ class Server
 
     var client = new AcceptedClient(tcpClient, inout, greeting);
 
-    clientsById[greeting.Id] = client;
+    var slot = GetSlot(greeting.Id);
+
+    slot.SetClient(client);
+
+    slot.Subscription.Disposable = client.In.Subscribe(
+      slot.Output.OnNext,
+      ex => logger.Error(ex, "Client output stream failed for {id}", greeting.Id),
+      () =>
+      {
+        logger.Info("Client {id} disconnected", greeting.Id);
+        slot.Client = null;
+      });
 
     clients.OnNext(client);
+  }
 
-    clientListener?.Invoke(greeting.Id, client);
+  Subject<String> GetOutput(String id)
+    => GetSlot(id).Output;
+
+  ClientSlot GetSlot(String id)
+  {
+    if (!clientsById.TryGetValue(id, out var slot))
+    {
+      slot = new ClientSlot();
+      clientsById[id] = slot;
+    }
+
+    return slot;
+  }
+}
+
+class ClientSlot
+{
+  public AcceptedClient? Client { get; set; }
+  public Subject<String> Output { get; } = new();
+  public SerialDisposable Subscription { get; } = new();
+
+  public void SetClient(AcceptedClient client)
+  {
+    Client = client;
   }
 }

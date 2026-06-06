@@ -33,6 +33,7 @@ static class Program
 				switch(ex)
 				{
 					case FriendlyException f:
+						logger.Error("Friendly exception: " + ex.Message);
 						AnsiConsole.WriteLine(f.Message);
 						break;
 					default:

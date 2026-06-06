@@ -122,20 +122,10 @@ class RunCommand : AsyncCommand<RunCommand.Settings>
   {
     Program.SetName(Guid.NewGuid().ToString());
 
-    AcceptedClient? client = null;
-
-    void SetNewClient(String id, AcceptedClient newClient)
-    {
-      client = newClient;
-
-      Console.WriteLine($"Accepted client with id {id}");
-    }
-
     if (s.Test)
     {
       s.Port ??= Server.Instance.Port;
       s.Id ??= "test";
-      Server.Instance.InstallClientListener(SetNewClient);
     }
 
     s.Cargs = [s.Cmd, .. context.Remaining.Raw];
@@ -147,7 +137,7 @@ class RunCommand : AsyncCommand<RunCommand.Settings>
       // We're exiting with Environment.Exit.
 
       // If the process runner is null, we assume the default runner is
-      // WindowedWrappedProcess and we're in a test scenario - so we
+      // WindowedWrappingProcess and we're in a test scenario - so we
       // allow termination with a 'q' input line.
 
       if (!s.Test)
@@ -163,7 +153,7 @@ class RunCommand : AsyncCommand<RunCommand.Settings>
         {
           if (line.Equals("q", StringComparison.InvariantCultureIgnoreCase))
           {
-            process.Stop();
+            process.Shutdown();
           }
         }
 
@@ -172,7 +162,7 @@ class RunCommand : AsyncCommand<RunCommand.Settings>
     }
     catch (Exception ex)
     {
-      logger.Error(ex, "Unhandled exception");
+      logger.Error(ex, "Unhandled exception, terminating wrapper");
 
       return 1;
     }
@@ -195,7 +185,6 @@ class RunCommand : AsyncCommand<RunCommand.Settings>
         OnOutput: output.WriteLine,
         OnLog: output.WriteLine,
         OnExit: _ => Environment.Exit(0),
-        SendMessageToClient: l => client?.Inout.output.WriteLine(l),
         CreateConsoleBlockedScope: output.CreateBlockedScope);
 
       var process = ProcessFactory.Instance.Start(settings);

@@ -15,10 +15,11 @@ class ProcessFactory
 
   public ProcessFactory()
   {
-    Add<DirectProcess>();
+    Add<DirectProcess>(!OperatingSystem.IsWindows());
+    Add<WrappedProcess>();
     Add<LegacyProcess>();
-    Add<WindowedWrappedProcess>(true);
-    Add<WrappedWindowedProcess>();
+    Add<WindowedWrappingProcess>(OperatingSystem.IsWindows());
+    Add<WrappingWindowedProcess>();
 
     Assert(defaultProcessType is not null);
   }
@@ -72,7 +73,7 @@ interface IProcess
   static abstract IReadOnlyList<String> Names { get; }
 }
 
-abstract class AbstractProcess(FactoryProcessSettings settings)
+abstract class AbstractProcess(FactoryProcessSettings settings) : IDisposable
 {
   public static String GetName<TProcess>()
     where TProcess : IProcess
@@ -86,9 +87,15 @@ abstract class AbstractProcess(FactoryProcessSettings settings)
 
   public abstract Int32 ExitCode { get; }
 
-  public abstract void Stop();
+  public virtual Boolean IsClientConnected => false;
+
+  public abstract Boolean Shutdown();
 
   public abstract void Kill();
+
+  public virtual void Dispose()
+  {
+  }
 
   protected void OnDataReceived(object? sender, DataReceivedEventArgs e)
   {
@@ -106,6 +113,8 @@ abstract class SystemDiagnosticsProcess(FactoryProcessSettings settings) : Abstr
   public override Int32 ExitCode => Process.ExitCode;
 
   protected abstract Process Process { get; }
+
+  public override Boolean Shutdown() => false;
 
   public override void Kill() => Process.Kill(true);
 
@@ -125,7 +134,7 @@ abstract class SystemDiagnosticsProcess(FactoryProcessSettings settings) : Abstr
     args.Add("run");
 
     args.Add("--runner");
-    args.Add("direct");
+    args.Add("wrapped");
 
     if (!flags.HasFlag(WrappingArgFlags.NoWindow) && settings.WindowStyle is { } windowStyle)
     {

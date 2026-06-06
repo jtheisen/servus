@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Reactive.Disposables;
 using System.Text;
+using Servus.Utils;
 
 enum State
 {
@@ -38,13 +39,11 @@ class Tasklet : IDisposable
 
 	AbstractProcess? process;
 
-	AcceptedClient? client = null;
+	SerialDisposable processDisposable = new();
 
-	Boolean IsClientConnected => client?.IsConnected ?? false;
+	Boolean IsClientConnected => process?.IsClientConnected ?? false;
 
 	String OutputSpinner => IsClientConnected ? $"[grey]{BrailleSpinner.FromNumber(outputSpinnerState)}[/]" : "";
-
-	SerialDisposable clientSubscription = new();
 
 	CompositeDisposable disposables = new();
 
@@ -55,7 +54,7 @@ class Tasklet : IDisposable
 	public Tasklet(Configuring.Task configuration)
 	{
 		Configuration = configuration;
-		disposables.Add(clientSubscription);
+		disposables.Add(processDisposable);
 
 		if (Port is Int32 port)
 		{
@@ -142,11 +141,26 @@ class Tasklet : IDisposable
 
 			Output.Add("Stopping...");
 
-			process.Stop();
+			_ = ShutdownAndEventuallyKill(process);
 		}
 		catch (Exception ex)
 		{
 			Output.Add(ex.Message);
+		}
+	}
+
+	async Task ShutdownAndEventuallyKill(AbstractProcess process)
+	{
+		var didSignal = process.Shutdown();
+
+		if (didSignal)
+		{
+			await Task.Delay(TimeSpan.FromSeconds(4));
+		}
+
+		if (!process.HasExited)
+		{
+			process.Kill();
 		}
 	}
 
@@ -156,6 +170,8 @@ class Tasklet : IDisposable
 
 		while (State != State.Stopped)
 		{
+			Assert(State == State.Stopping, "Stopping was interrupted");
+
 			await Task.Delay(50, cancellationToken);
 		}
 	}
@@ -193,14 +209,15 @@ class Tasklet : IDisposable
 			WindowStyle: windowStyle,
 			Port: port,
 			Id: Name,
+			PosixShutdownSignal: Configuration.PosixShutdownSignal,
 			RedirectOutput: !showWindow,
 			KeepTerminalOpen: showWindow,
 			OnOutput: LogFromSelf,
 			OnLog: LogFromSelf,
-			OnExit: HandleExit,
-			SendMessageToClient: SendMessageToClient);
+			OnExit: HandleExit);
 
 		process = ProcessFactory.Instance.Start(settings);
+		processDisposable.Disposable = process;
 	}
 
 	public void HandleExit(Int32 exitCode)
@@ -208,8 +225,6 @@ class Tasklet : IDisposable
 		var previousState = State;
 
 		State = State.Stopped;
-
-		client = null;
 
 		if (previousState == State.Restarting)
 		{
@@ -219,7 +234,7 @@ class Tasklet : IDisposable
 
 	const Int32 MaxPendingSpinningForOutput = 4;
 
-	public void LogFromClient(String message)
+	public void LogFromSelf(String message)
 	{
 		if (pendingSpinningForOutput < MaxPendingSpinningForOutput)
 		{
@@ -227,39 +242,6 @@ class Tasklet : IDisposable
 		}
 
 		Output.Add(message);
-	}
-
-	public void LogFromSelf(String message) => Output.Add(message);
-
-	public void SetClient(AcceptedClient client)
-	{
-		logger.Debug("Setting new client on tasklet");
-
-		this.client = client;
-		clientSubscription.Disposable = client.In.Subscribe(
-			LogFromClient,
-			_ => logger.Error("Connection terminated with exception"),
-			() => logger.Info("Client connection closed gracefully")
-		);
-
-		if (State == State.Stopping)
-		{
-			process?.Stop();
-		}
-	}
-
-	void SendMessageToClient(String line)
-	{
-		if (client is not null)
-		{
-			logger.Debug($"Sending message '{line}' through tcp");
-
-			client.WriteLine(line);
-		}
-		else
-		{
-			logger.Warn($"Can't gracefully stop service '{Name}' without a connected client");
-		}
 	}
 
 	void IDisposable.Dispose()

@@ -34,7 +34,6 @@ class AppState
 		Profiles = configuration.Profiles;
 		taskletsById = Tasklets.ToDictionary(t => t.Name);
 
-		Server.Instance.InstallClientListener(SetNewClient);
 	}
 
 	public IReadOnlyList<TaskDto> GetTasks()
@@ -174,17 +173,6 @@ class AppState
 				OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 	}
 
-	void SetNewClient(String id, AcceptedClient client)
-	{
-		if (taskletsById.TryGetValue(id, out var tasklet))
-		{
-			tasklet.SetClient(client);
-		}
-		else
-		{
-			throw new Exception($"Unkown connection id '{id}' from client.");
-		}
-	}
 }
 
 record TaskOverviewDto(

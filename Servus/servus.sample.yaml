@@ -38,6 +38,7 @@ tasks:
     wd: my-serivce # working directory relative to this file
     port: 3000 # optional port for connection checks
     method: tcp # TCP for tcp-based checks, GET, HEAD, or OPTIONS for http checks
+    posixShutdownSignal: 15 # optional signal number for direct runner shutdown on POSIX
     profiles: [ fe ] # profiles to take defaults from
     # Shortcuts can also live here:
     shortcuts:

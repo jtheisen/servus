@@ -4,7 +4,7 @@ using System.Diagnostics;
 
 class LegacyProcess : SystemDiagnosticsProcess, IProcess
 {
-  static IReadOnlyList<String> IProcess.Names => ["wrapped-legacy"];
+  static IReadOnlyList<String> IProcess.Names => ["wrapping-legacy"];
 
   protected override Process Process { get; }
 
@@ -51,8 +51,9 @@ class LegacyProcess : SystemDiagnosticsProcess, IProcess
     Process.BeginErrorReadLine();
   }
 
-  public override void Stop()
+  public override Boolean Shutdown()
   {
     Process.StandardInput.WriteLine();
+    return true;
   }
 }

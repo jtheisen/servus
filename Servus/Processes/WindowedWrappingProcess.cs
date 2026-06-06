@@ -1,24 +1,25 @@
 using System.Diagnostics;
 
-
-
-class WrappedWindowedProcess : SystemDiagnosticsProcess, IProcess
+class WindowedWrappingProcess : WrappingProcess, IProcess
 {
-  static IReadOnlyList<String> IProcess.Names => ["wrapped-windowed"];
+  static IReadOnlyList<String> IProcess.Names => ["windowed-wrapping"];
 
   protected override Process Process { get; }
 
-  public WrappedWindowedProcess(FactoryProcessSettings settings)
+  public WindowedWrappingProcess(FactoryProcessSettings settings)
     : base(settings)
   {
-    var ownArgs = GetWrappingRunArgs();
+    var ownArgs = GetWrappingRunArgs(WrappingArgFlags.NoWindow);
 
-    var ownPath = Environment.ProcessPath ?? throw new Exception("Can't see what executable we're running");
+    var ownPath = settings.ServusPath
+      ?? Environment.ProcessPath
+      ?? throw new Exception("Can't see what executable we're running");
 
     Process = ConsoleProcessRunner.StartProcess(
       new ConsoleProcessSettings(
         [ownPath, .. ownArgs],
         WorkingDirectory: Environment.CurrentDirectory,
+        WindowStyle: settings.WindowStyle,
         RedirectOutput: settings.RedirectOutput,
         CreateNoWindow: settings.CreateNoWindow,
         NoShellExecute: settings.NoShellExecute,
@@ -29,8 +30,4 @@ class WrappedWindowedProcess : SystemDiagnosticsProcess, IProcess
         CreateConsoleBlockedScope: settings.CreateConsoleBlockedScope));
   }
 
-  public override void Stop()
-  {
-    Process.StandardInput.WriteLine("terminate");
-  }
 }

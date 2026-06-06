@@ -200,6 +200,7 @@ class Task : WithCommand, IValidatableObject
 	public String? Proj { get; set; }
 	public Int32? Port { get; set; }
 	public String? Method { get; set; }
+	public Int32? PosixShutdownSignal { get; set; }
 	public List<String> Profiles { get; set; } = new();
 	public List<Task> Shortcuts { get; set; } = new();
 	public Char? Key { get; set; }
@@ -216,6 +217,7 @@ class Task : WithCommand, IValidatableObject
 			Proj = Proj ?? defaults.Proj,
 			Port = Port ?? defaults.Port,
 			Method = Method ?? defaults.Method,
+			PosixShutdownSignal = PosixShutdownSignal ?? defaults.PosixShutdownSignal,
 			Cmd = Cmd ?? defaults.Cmd,
 			Exe = Exe ?? defaults.Exe,
 			Args = Args ?? defaults.Args,

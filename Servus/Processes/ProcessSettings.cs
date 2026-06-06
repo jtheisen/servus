@@ -5,8 +5,10 @@ record class FactoryProcessSettings(
   String? WorkingDirectory = null,
   String? ProcessRunner = null,
   ProcessWindowStyle? WindowStyle = null,
+  String? ServusPath = null,
   Int32? Port = null,
   String? Id = null,
+  Int32? PosixShutdownSignal = null,
   Boolean RedirectOutput = true,
   Boolean CreateNoWindow = false,
   Boolean NoShellExecute = false,
@@ -14,8 +16,7 @@ record class FactoryProcessSettings(
   Action<String>? OnOutput = null,
   Action<String>? OnLog = null,
   Action<Int32>? OnExit = null,
-  Func<IDisposable>? CreateConsoleBlockedScope = null,
-  Action<String>? SendMessageToClient = null
+  Func<IDisposable>? CreateConsoleBlockedScope = null
 );
 
 record class ConsoleProcessSettings(
