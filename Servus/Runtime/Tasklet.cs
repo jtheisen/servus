@@ -137,10 +137,6 @@ class Tasklet : IDisposable
 		{
 			State = State.Stopping;
 
-			logger.Debug($"Stopping '{Name}'");
-
-			Output.Add("Stopping...");
-
 			_ = ShutdownAndEventuallyKill(process);
 		}
 		catch (Exception ex)
@@ -151,6 +147,10 @@ class Tasklet : IDisposable
 
 	async Task ShutdownAndEventuallyKill(AbstractProcess process)
 	{
+		logger.Debug($"Stopping '{Name}'");
+
+		Output.Add("Stopping...");
+
 		var didSignal = process.Shutdown();
 
 		if (didSignal)
@@ -160,6 +160,10 @@ class Tasklet : IDisposable
 
 		if (!process.HasExited)
 		{
+			logger.Debug($"Killing '{Name}' after timeout");
+
+			Output.Add("Killing after timeout...");
+
 			process.Kill();
 		}
 	}

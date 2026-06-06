@@ -15,8 +15,15 @@ if (!Int32.TryParse(nestingText, out var nesting) || nesting < 0)
 
 Console.WriteLine($"Sample process {Environment.ProcessId}: mode={mode}, nesting={nesting}");
 
+if (mode is not ("graceful" or "stubborn"))
+{
+	throw new Exception($"Unknown mode '{mode}'. Use 'graceful' or 'stubborn'.");
+}
+
 if (nesting > 0)
 {
+	var parentRegistrations = InstallStubbornHandlers(nesting);
+
 	var ownPath = Environment.ProcessPath ?? throw new Exception("Can't see what executable we're running.");
 	var startInfo = new ProcessStartInfo
 	{
@@ -34,15 +41,16 @@ if (nesting > 0)
 		?? throw new Exception("Could not start child process.");
 
 	child.WaitForExit();
+
+	foreach (var registration in parentRegistrations)
+	{
+		registration.Dispose();
+	}
+
 	return child.ExitCode;
 }
 
-var registrations = mode switch
-{
-	"stubborn" => InstallStubbornHandlers(),
-	"graceful" => [],
-	_ => throw new Exception($"Unknown mode '{mode}'. Use 'graceful' or 'stubborn'.")
-};
+var registrations = mode == "stubborn" ? InstallStubbornHandlers(nesting) : [];
 
 await Task.Delay(Timeout.InfiniteTimeSpan);
 
@@ -53,11 +61,11 @@ foreach (var registration in registrations)
 
 return 0;
 
-static IDisposable[] InstallStubbornHandlers()
+static IDisposable[] InstallStubbornHandlers(Int32 nesting)
 {
 	Console.CancelKeyPress += (_, e) =>
 	{
-		Console.WriteLine($"Sample process {Environment.ProcessId}: ignoring {e.SpecialKey}");
+		Console.WriteLine($"Sample process {Environment.ProcessId}, nesting={nesting}: ignoring {e.SpecialKey}");
 		e.Cancel = true;
 	};
 
@@ -70,10 +78,10 @@ static IDisposable[] InstallStubbornHandlers()
 			Register(PosixSignal.SIGQUIT),
 		];
 
-	static PosixSignalRegistration Register(PosixSignal signal)
+	PosixSignalRegistration Register(PosixSignal signal)
 		=> PosixSignalRegistration.Create(signal, context =>
 		{
-			Console.WriteLine($"Sample process {Environment.ProcessId}: ignoring {context.Signal}");
+			Console.WriteLine($"Sample process {Environment.ProcessId}, nesting={nesting}: ignoring {context.Signal}");
 			context.Cancel = true;
 		});
 }

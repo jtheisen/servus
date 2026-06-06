@@ -32,8 +32,6 @@ abstract class WrappingProcess : SystemDiagnosticsProcess
     {
       Server.Instance.TrySend(id, "kill");
     }
-
-    base.Kill();
   }
 
   public override void Dispose()
