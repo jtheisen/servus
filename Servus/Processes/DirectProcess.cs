@@ -15,9 +15,9 @@ class DirectProcess : SystemDiagnosticsProcess, IProcess
       new ConsoleProcessSettings(
         settings.Cargs,
         WorkingDirectory: settings.WorkingDirectory,
-        WindowStyle: settings.WindowStyle,
-        RedirectOutput: settings.RedirectOutput,
-        CreateNoWindow: settings.CreateNoWindow,
+        WindowStyle: null,
+        RedirectOutput: true,
+        CreateNoWindow: true,
         NoShellExecute: settings.NoShellExecute,
         KeepTerminalOpen: settings.KeepTerminalOpen,
         OnOutput: settings.OnOutput,
