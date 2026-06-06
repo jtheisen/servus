@@ -9,6 +9,7 @@ record class FactoryProcessSettings(
   Int32? Port = null,
   String? Id = null,
   Int32? PosixShutdownSignal = null,
+  Int32? ShutdownTimeoutMillis = null,
   Boolean RedirectOutput = true,
   Boolean CreateNoWindow = false,
   Boolean NoShellExecute = false,

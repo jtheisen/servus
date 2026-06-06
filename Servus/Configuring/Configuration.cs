@@ -201,6 +201,7 @@ class Task : WithCommand, IValidatableObject
 	public Int32? Port { get; set; }
 	public String? Method { get; set; }
 	public Int32? PosixShutdownSignal { get; set; }
+	public Int32? ShutdownTimeoutMillis { get; set; }
 	public List<String> Profiles { get; set; } = new();
 	public List<Task> Shortcuts { get; set; } = new();
 	public Char? Key { get; set; }
@@ -218,6 +219,7 @@ class Task : WithCommand, IValidatableObject
 			Port = Port ?? defaults.Port,
 			Method = Method ?? defaults.Method,
 			PosixShutdownSignal = PosixShutdownSignal ?? defaults.PosixShutdownSignal,
+			ShutdownTimeoutMillis = ShutdownTimeoutMillis ?? defaults.ShutdownTimeoutMillis,
 			Cmd = Cmd ?? defaults.Cmd,
 			Exe = Exe ?? defaults.Exe,
 			Args = Args ?? defaults.Args,

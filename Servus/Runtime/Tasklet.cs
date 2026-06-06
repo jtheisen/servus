@@ -24,6 +24,7 @@ class Tasklet : IDisposable
 	public String? ProcessRunner => Configuration.ProcessRunner;
 	public Int32? Port => Configuration.Port;
 	public Configuring.ConnectionMethod Method => Configuration.GetConnectionMethod();
+	public Int32 ShutdownTimeoutMillis => Configuration.ShutdownTimeoutMillis ?? 4000;
 
 	public State State { get; set; } = State.Stopped;
 
@@ -155,7 +156,7 @@ class Tasklet : IDisposable
 
 		if (didSignal)
 		{
-			await Task.Delay(TimeSpan.FromSeconds(4));
+			await Task.Delay(ShutdownTimeoutMillis);
 		}
 
 		if (!process.HasExited)
