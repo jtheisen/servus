@@ -14,11 +14,14 @@ class AppState
 
 	public static AppState Load(String filePath)
 	{
+		var fullPath = Path.GetFullPath(filePath);
+		var configDirectory = Path.GetDirectoryName(fullPath)
+			?? throw new FriendlyException($"Could not determine configuration directory for '{filePath}'.");
 		var configuration = Configuring.Configuration.Load(filePath);
-		return new AppState(configuration);
+		return new AppState(configuration, configDirectory);
 	}
 
-	public AppState(Configuring.Configuration configuration)
+	public AppState(Configuring.Configuration configuration, String configDirectory)
 	{
 		Settings = configuration.Settings;
 
@@ -28,7 +31,7 @@ class AppState
 		Tasklets = configuration.Tasks
 			.Select(t => t.WithDefaults(profiles))
 			.Select(t => t.Validate())
-			.Select(t => new Tasklet(t))
+			.Select(t => new Tasklet(t, configDirectory))
 			.ToList();
 
 		Profiles = configuration.Profiles;
@@ -116,6 +119,18 @@ class AppState
 		RunCommandRequestDto request,
 		CancellationToken cancellationToken)
 	{
+		var workingDirectory = default(String);
+
+		if (request.Task is { } task)
+		{
+			if (!taskletsById.TryGetValue(task, out var tasklet))
+			{
+				throw new FriendlyException($"Unknown task '{task}'.");
+			}
+
+			workingDirectory = tasklet.Wd;
+		}
+
 		var cargs = CommandLineArgs.Parse(request.Command);
 
 		if (cargs.Length == 0)
@@ -129,6 +144,7 @@ class AppState
 
 		var process = ConsoleProcessRunner.StartProcess(new ConsoleProcessSettings(
 			cargs,
+			WorkingDirectory: workingDirectory,
 			CreateNoWindow: true,
 			NoShellExecute: true,
 			OnOutput: output.Add,
@@ -211,7 +227,7 @@ record TaskActionResultDto(
 	String? State,
 	String? Message);
 
-record RunCommandRequestDto(String Command);
+record RunCommandRequestDto(String Command, String? Task = null);
 
 record RunCommandResultDto(
 	String Command,

@@ -19,7 +19,7 @@ class Tasklet : IDisposable
 	public Configuring.Task Configuration { get; }
 
 	public String Name => Configuration.Name ?? throw new Exception("Task validation should require a name.");
-	public String? Wd => Configuration.Wd;
+	public String? Wd { get; }
 	public String Type => Configuration.Type ?? "";
 	public String? ProcessRunner => Configuration.ProcessRunner;
 	public Int32? Port => Configuration.Port;
@@ -52,9 +52,10 @@ class Tasklet : IDisposable
 
 	Int32 outputSpinnerState, pendingSpinningForOutput;
 
-	public Tasklet(Configuring.Task configuration)
+	public Tasklet(Configuring.Task configuration, String configDirectory)
 	{
 		Configuration = configuration;
+		Wd = ResolveWorkingDirectory(Configuration.Wd, configDirectory);
 		disposables.Add(processDisposable);
 
 		if (Port is Int32 port)
@@ -66,6 +67,16 @@ class Tasklet : IDisposable
 		{
 			disposables.Add(GitBranchTester.GetTester(wd, Name).Subscribe(branch => GitBranch = branch));
 		}
+	}
+
+	static String? ResolveWorkingDirectory(String? wd, String configDirectory)
+	{
+		if (String.IsNullOrWhiteSpace(wd))
+		{
+			return null;
+		}
+
+		return Path.GetFullPath(wd, configDirectory);
 	}
 
 	public void Tick()

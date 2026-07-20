@@ -47,4 +47,12 @@ class ServusMcpTools(AppState state)
 		[Description("The full command line to run. It must start with one of the allowed command prefixes.")] String command,
 		CancellationToken cancellationToken)
 		=> state.RunCommandAsync(new RunCommandRequestDto(command), cancellationToken);
+
+	[McpServerTool]
+	[Description("Runs a command in one Servus task's working directory if it starts with one of the configured allowed command prefixes. Use GetTasks first to inspect task names and allowedCommands.")]
+	public Task<RunCommandResultDto> RunTaskCommand(
+		[Description("The task name whose working directory should be used.")] String task,
+		[Description("The full command line to run. It must start with one of the allowed command prefixes.")] String command,
+		CancellationToken cancellationToken)
+		=> state.RunCommandAsync(new RunCommandRequestDto(command, task), cancellationToken);
 }
